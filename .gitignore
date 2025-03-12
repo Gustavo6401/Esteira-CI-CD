@@ -1,3 +1,9 @@
+# Arquivos de IDE
 .vscode
 .vs
+
+# Arquivos Binários.
 *.exe
+*.dll
+*.a
+*.o
