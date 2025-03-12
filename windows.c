@@ -1,3 +1,4 @@
+#include "uncompact.h"
 #include <stdio.h>
 #include <windows.h>
 
@@ -23,7 +24,7 @@ int has_extension(const char* filename, const char* ext) {
 void watch_directory(const char* path) {
     HANDLE hDir = CreateFile(
         path, FILE_LIST_DIRECTORY,
-        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        FILE_SHARE_WRITE | FILE_SHARE_READ,
         NULL, OPEN_EXISTING,
         FILE_FLAG_BACKUP_SEMANTICS, NULL
     );
@@ -53,10 +54,15 @@ void watch_directory(const char* path) {
 
                     printf("📂 Arquivo Detectado: %s\n", filename);
 
+                    char fullFilePath[1024];
+                    sprintf(fullFilePath, "%s\\%s", path, filename);
+
                     if(has_extension(filename, ".zip")
                         || has_extension(filename, ".tar")
                         || has_extension(filename, ".7z")) {
-                            printf("🎯 Arquivo de Deploy detectado: %s\n", filename);
+                            printf("🎯 Arquivo de Deploy detectado: %s\n", fullFilePath);
+                            uncompact_file(fullFilePath);
+                            remove(fullFilePath);
                         }
 
                     if(pNotify->NextEntryOffset == 0)

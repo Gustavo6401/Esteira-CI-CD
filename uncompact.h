@@ -13,6 +13,6 @@
 
 #include <stdio.h>
 
-DLL_EXPORT int uncompact_file(const char *path, const char *destination_path);
+DLL_EXPORT int uncompact_file(const char *path);
 
 #endif
