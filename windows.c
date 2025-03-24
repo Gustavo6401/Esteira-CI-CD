@@ -77,6 +77,6 @@ void watch_directory(const char* path) {
 }
 
 int main() {
-    watch_directory("C:\\Users\\Gustavo\\Documents");
+    watch_directory("C:\\Users\\Gustavo\\Documents\\Xadrez");
     return 0;
 }
