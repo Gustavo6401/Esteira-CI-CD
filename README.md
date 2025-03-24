@@ -65,4 +65,85 @@ Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
 
 Compilar a Aplicação é algo que exige tamanha atenção, pois o objetivo é que geremos os executáveis para que tudo funcione corretamente. Seguiremos o princípio de não instalarmos nada em seu computador (exceto o OpenSSH), esse é necessário. Primeiro de tudo, precisamos compilar o arquivo `uncompact.c` que é responsável por ler o conteúdo da `uncompact.h`
 
+#### Para Criar uma .dll:
+
+Primeiro de tudo, como estamos em um ambiente Windows, é essencial que façamos a compilação de uma .dll. 
+
+``` powershell
+gcc -shared -o uncompact.dll uncompact.c -DBBUILD_DLL
+```
+
+Se você for parar para analisar em nosso arquivo `uncompact.h`, nós temos um comando muito importante para a Compilação de DLLS, arquivo esse que é importado e visto como uma lib:
+
+``` c
+#ifndef UNCOMPACT_H
+#define UNCOMPACT_H
+
+#ifdef _WIN32
+    #ifdef BUILD_DLL
+        #define DLL_EXPORT __declspec(dllexport)
+    #else 
+        #define DLL_EXPORT __declspec(dllimport)
+    #endif
+#else 
+    #define DLL_EXPORT
+#endif
+
+#include <stdio.h>
+
+DLL_EXPORT int uncompact_file(const char *path);
+
+#endif
+```
+
+É exatamente isso o que faz o DLLExport. Porém, para usá-los nós precisamos especialmente do `DBBUILD_DLL`.
+
+#### Para Criar o Executável:
+
+A criação do Executável é muito simples, porém, temos que informar que `uncompact.c` contém especiamente uma função que precisamos utilizar a partir de nossa .dll.
+
+A forma de fazer isso é pelo seguinte comando:
+
+``` powershell
+gcc -o windows.exe windows.c -L. -luncompact
+```
+
+A partir daí, você gerou o seu executável, mas é importante que você não rode a sua aplicação agora, mas que você assine ela por meio do Signtool:
+
+### E Como eu Assino uma Aplicação com o Signtool e para que Ele Serve? 🤔
+
+O Signtool é uma tecnologia muito importante que nos permite mostrar para o Windows, especialmente o Windows Defender que o Aplicativo que desenvolvemos é seguro. Ele fica contido em um diretório e admito que não consegui criar variáveis de Ambiente para Ele. Vale lembrar que o Signtool só serve para arquivos que você gerou e especialmente em sua própria máquina. Esse processo precisa ser feito pois esse arquivo monitora um diretório completo da sua máquina, com tudo o que está envolvido nele. Muitos vírus de Computador fazem isso, mas vale lembrar também, que muitos vírus de computador monitoram diretórios completos no computador das vítmas. 
+
+#### Primeiro: Vamos ao Diretório Dele
+
+O diretório do Signtool não é tão simples de ser encontrado e admito não ter conseguido criar variáveis de ambiente para ele, nesse caso, vamos manualmente até o diretório, o caminho completo (ao menos em meu PC) é:
+
+``` powershell
+"C:\\Program Files\\Windows Kits\\10\\bin\\10.0.22621.0\\x64\\signtool.exe"
+```
+
+Longo né? 😮‍💨
+
+Bom, agora que chegamos até aqui, você precisa rodar o seguinte comando: 
+
+``` powershell
+.\signtool sign /a /fd sha256 "C:\<CAMINHO COMPLETO>\HelloWorld\windows.exe"
+```
+
+Dentro desse comando, são necessárias informações como escolher o melhor certificado instalado no Computador e até mesmo a flag `/fd` é responsável por informar o algoritmo de incriptação, eu sempre utilizo SHA256. Para mais informações, consulte a documentação da Microsoft no Link:
+
+[Documentação](https://learn.microsoft.com/en-us/dotnet/framework/tools/signtool-exe)
+
+### Finalmente, vamos rodar a aplicação
+
+Volte à pasta de sua aplicação.
+
+Por fim, rode:
+
+``` powershell
+.\windows.exe
+```
+
+Agora, todas as pastas compactadas com .zip e .tar que forem enviadas para aquela pasta serão automaticamente descompactadas. Isso iria facilitar muito o meu trabalho. Especialmente na pasta da esteira de CI/CD.
+
 Obrigado pela atenção! 
